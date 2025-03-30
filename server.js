@@ -3,7 +3,7 @@ const puppeteer = require("puppeteer");
 const cors = require("cors");
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
@@ -15,7 +15,18 @@ app.post("/download", async (req, res) => {
   }
 
   try {
-    const browser = await puppeteer.launch({ headless: true });
+    const browser = await puppeteer.launch({
+      headless: "new",
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-gpu",
+        "--no-zygote",
+        "--single-process"
+      ],
+    });
+
     const page = await browser.newPage();
     await page.goto("https://ssstik.io/en", { waitUntil: "networkidle2" });
 
@@ -23,12 +34,10 @@ app.post("/download", async (req, res) => {
     await page.click("button[type='submit']");
 
     await page.waitForSelector("a.without_watermark[href]", { timeout: 30000 });
-    const videoLink = await page.$eval(
-      "a.without_watermark[href]",
-      (el) => el.href
-    );
 
+    const videoLink = await page.$eval("a.without_watermark[href]", (el) => el.href);
     await browser.close();
+
     return res.json({ videoUrl: videoLink });
   } catch (error) {
     console.error(error);
@@ -37,5 +46,5 @@ app.post("/download", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
