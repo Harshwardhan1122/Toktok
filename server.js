@@ -15,14 +15,14 @@ app.post("/download", async (req, res) => {
   }
 
   try {
-    const browser = await puppeteer.launch({ headless: false });
+    const browser = await puppeteer.launch({ headless: true });
     const page = await browser.newPage();
     await page.goto("https://ssstik.io/en", { waitUntil: "networkidle2" });
 
     await page.type("input[name='id']", url);
     await page.click("button[type='submit']");
 
-    await page.waitForSelector("a.without_watermark[href]", { timeout: 20000 });
+    await page.waitForSelector("a.without_watermark[href]", { timeout: 30000 });
     const videoLink = await page.$eval(
       "a.without_watermark[href]",
       (el) => el.href
